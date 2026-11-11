@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>全民大贏家 - 圓桌純配對撲克</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700;900&display=swap');
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at 50% 25%, #0e2e1f 0%, #05130c 100%);
+      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #ffffff;
+      overflow: hidden;
+      height: 100dvh;
+      width: 100vw;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* iPhone 17 Pro Portrait Frame Container */
+    .iphone-viewport {
+      position: relative;
+      width: 100%;
+      max-width: 430px;
+      height: 100dvh;
+      max-height: 932px;
+      background: radial-gradient(ellipse at 50% 42%, #0d3522 0%, #061a10 78%, #020c07 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9);
+    }
+
+    @media (min-width: 480px) {
+      .iphone-viewport {
+        height: 95dvh;
+        border-radius: 44px;
+        border: 6px solid #1f2823;
+      }
+    }
+
+    /* Circular Arena & Perfectly Circular Green Felt Table */
+    .circular-arena {
+      position: relative;
+      width: 100%;
+      max-width: 416px;
+      aspect-ratio: 1 / 1;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Perfectly Circular Casino Green Felt Table (正圓形牌桌) */
+    .poker-table-outer {
+      position: absolute;
+      width: 75%;
+      height: 75%;
+      border-radius: 50%;
+      background: conic-gradient(from 45deg, #4e2712, #2b1306, #613218, #281105, #4e2712);
+      padding: 12px;
+      box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.9),
+        inset 0 2px 6px rgba(255, 225, 130, 0.45),
+        inset 0 -4px 10px rgba(0, 0, 0, 0.85),
+        0 0 0 2.5px #d4af37;
+      z-index: 1;
+    }
+
+    .poker-table-felt {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: radial-gradient(circle at center, #187a4b 0%, #0d5232 64%, #06301c 100%);
+      box-shadow:
+        inset 0 0 36px rgba(0, 0, 0, 0.82),
+        0 0 0 2px rgba(235, 198, 91, 0.72);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Inner Gold Ring on Circular Felt */
+    .poker-table-felt::before {
+      content: "";
+      position: absolute;
+      inset: 11px;
+      border-radius: 50%;
+      border: 1.5px dashed rgba(245, 208, 97, 0.35);
+      pointer-events: none;
+    }
+
+    /* 6 Radial Positions evenly spaced every 60 degrees around the Circular Table */
+    .radial-seat {
+      position: absolute;
+      z-index: 15;
+      transform: translate(-50%, -50%);
+    }
+    /* 12 o'clock (0 deg): Dealer & Card Shoe */
+    .pos-dealer { top: 8%; left: 50%; }
+    /* 2 o'clock (60 deg): Seat 4 (Lula) */
+    .pos-seat-4 { top: 27%; left: 86%; }
+    /* 4 o'clock (120 deg): Seat 3 (Modi) */
+    .pos-seat-3 { top: 73%; left: 86%; }
+    /* 6 o'clock (180 deg): Seat 0 (Human Player) */
+    .pos-seat-0 { top: 92%; left: 50%; width: 95%; }
+    /* 8 o'clock (240 deg): Seat 2 (Takaichi) */
+    .pos-seat-2 { top: 73%; left: 14%; }
+    /* 10 o'clock (300 deg): Seat 1 (Sanchez) */
+    .pos-seat-1 { top: 27%; left: 14%; }
+
+    /* Persistent Card Slot & Non-destructive Card Styling */
+    .card-slot {
+      position: relative;
+      aspect-ratio: 2 / 3;
+      border-radius: 8px;
+      perspective: 700px;
+      flex-shrink: 0;
+    }
+
+    .poker-card {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 8px;
+      transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.28s ease;
+      transform-style: preserve-3d;
+      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.6);
+      background: #ffffff;
+    }
+
+    @keyframes cardLandBounce {
+      0% { transform: scale(1.15); }
+      65% { transform: scale(0.95); }
+      100% { transform: scale(1); }
+    }
+
+    .card-landed {
+      animation: cardLandBounce 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .poker-card.matched-glow {
+      transform: translateY(-5px) scale(1.05);
+      box-shadow:
+        0 0 0 2.5px #ffd700,
+        0 0 16px rgba(255, 215, 0, 0.95),
+        0 8px 16px rgba(0, 0, 0, 0.65);
+      z-index: 20;
+    }
+
+    .poker-card.winning-card {
+      animation: winnerPulse 1s ease-in-out infinite alternate;
+      z-index: 25;
+    }
+
+    @keyframes winnerPulse {
+      0% {
+        transform: translateY(-4px) scale(1.05);
+        box-shadow: 0 0 0 2.5px #ffd700, 0 0 16px #ffd700;
+      }
+      100% {
+        transform: translateY(-8px) scale(1.1);
+        box-shadow: 0 0 0 3.5px #fff3a1, 0 0 26px #ffae00;
+      }
+    }
+
+    /* Flying Card Element for Real-time Dealing Trajectory */
+    .flying-card {
+      position: fixed;
+      z-index: 100;
+      pointer-events: none;
+      border-radius: 7px;
+      background: #083520;
+      padding: 2.5px;
+      border: 1.5px solid #facc15;
+      box-shadow: 0 16px 28px rgba(0, 0, 0, 0.78);
+      will-change: transform, left, top, width, height;
+      transition:
+        left 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+        top 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+        width 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+        height 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Active Player Turn Halo */
+    @keyframes turnHalo {
+      0%, 100% {
+        box-shadow: 0 0 0 2px #facc15, 0 0 14px rgba(250, 204, 21, 0.85);
+      }
+      50% {
+        box-shadow: 0 0 0 4px #fde047, 0 0 24px rgba(250, 204, 21, 1);
+      }
+    }
+
+    .active-turn-ring {
+      animation: turnHalo 1.2s infinite ease-in-out;
+    }
+
+    /* Glassmorphism iOS Panels */
+    .ios-glass {
+      background: rgba(10, 26, 18, 0.8);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 215, 0, 0.28);
+    }
+
+    .gold-gradient-text {
+      background: linear-gradient(180deg, #fff6b7 0%, #f6c445 55%, #d49419 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="iphone-viewport" id="appRoot">
+
+    <!-- 1. Top iOS Status & Control Bar -->
+    <header class="relative z-30 flex items-center justify-between px-3.5 pt-2.5 pb-1">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-yellow-400 via-amber-500 to-yellow-700 flex items-center justify-center shadow-lg border border-yellow-200">
+          <span class="text-black font-black text-base leading-none">贏</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-sm font-black tracking-wide gold-gradient-text">全民大贏家</h1>
+            <span id="stageBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950/90 text-emerald-300 border border-emerald-500/40">
+              準備開局
+            </span>
+          </div>
+          <p class="text-[9px] text-emerald-200/75">圓桌純配對制 · 五鐵 ＞ 鐵支 ＞ 葫蘆 ＞ 三條 ＞ 兩對 ＞ 一對</p>
+        </div>
+      </div>
+
+      <!-- Right Utility Buttons -->
+      <div class="flex items-center gap-1">
+        <button id="btnAudioToggle" onclick="toggleAudio()" title="R&B 音樂 / 音效開關"
+          class="ios-glass w-7 h-7 rounded-full flex items-center justify-center text-yellow-300 hover:scale-105 active:scale-95 transition">
+          <span id="audioIcon" class="text-xs">🔊</span>
+        </button>
+        <button onclick="toggleRulesModal(true)"
+          class="ios-glass px-2 h-7 rounded-full text-[11px] font-bold text-yellow-200 hover:bg-yellow-500/20 active:scale-95 transition">
+          規則圖鑑
+        </button>
+        <button onclick="resetAllChips()" title="重置所有玩家籌碼"
+          class="ios-glass px-2 h-7 rounded-full text-[11px] font-bold text-emerald-200 hover:bg-emerald-500/20 active:scale-95 transition">
+          補碼
+        </button>
+      </div>
+    </header>
+
+    <!-- Live Broadcast Banner below header -->
+    <div class="relative z-20 flex justify-center px-3">
+      <div id="tableBroadcast" class="text-[11px] font-bold text-yellow-200/95 bg-black/55 px-3.5 py-0.5 rounded-full border border-yellow-500/30 shadow">
+        點擊下方「發牌開局」由 12 點鐘方向莊家順時針發牌
+      </div>
+    </div>
+
+    <!-- 2. Main Circular Poker Table Arena (Dealer + 5 Players evenly spaced 60° apart) -->
+    <main class="relative z-10 flex-1 flex flex-col justify-center items-center px-1 overflow-visible">
+
+      <div class="circular-arena" id="circularArena">
+
+        <!-- Perfectly Circular Green Felt Table -->
+        <div class="poker-table-outer">
+          <div class="poker-table-felt">
+            <!-- Center Table: Pot & 5 Persistent Community Card Slots -->
+            <div class="flex flex-col items-center justify-center z-10 px-2">
+              <div class="text-[9px] tracking-[0.22em] text-yellow-200/30 font-black mb-0.5 select-none">ROYAL CIRCLE TABLE</div>
+
+              <!-- Total Pot Pill -->
+              <div class="ios-glass px-3 py-0.5 rounded-full flex items-center gap-1.5 shadow-md mb-2 border border-yellow-400/45">
+                <span class="text-[10px] text-yellow-100/80 font-semibold">總底池</span>
+                <span id="potDisplay" class="text-sm font-black text-yellow-300 tracking-wide">$0</span>
+                <span class="text-[10px] text-emerald-300/85 border-l border-white/15 pl-1.5" id="currentBetInfo">跟注 $0</span>
+              </div>
+
+              <!-- 5 Persistent Community Card Slots (Never destroyed during dealing) -->
+              <div id="communityCardsContainer" class="flex items-center justify-center gap-1">
+                <div id="comm-slot-0" class="card-slot w-[42px] h-[63px] border border-dashed border-yellow-400/35 bg-black/25 flex items-center justify-center"><span class="text-[8px] font-bold text-yellow-200/35">FLOP</span></div>
+                <div id="comm-slot-1" class="card-slot w-[42px] h-[63px] border border-dashed border-yellow-400/35 bg-black/25 flex items-center justify-center"><span class="text-[8px] font-bold text-yellow-200/35">FLOP</span></div>
+                <div id="comm-slot-2" class="card-slot w-[42px] h-[63px] border border-dashed border-yellow-400/35 bg-black/25 flex items-center justify-center"><span class="text-[8px] font-bold text-yellow-200/35">FLOP</span></div>
+                <div id="comm-slot-3" class="card-slot w-[42px] h-[63px] border border-dashed border-yellow-400/35 bg-black/25 flex items-center justify-center"><span class="text-[8px] font-bold text-yellow-200/35">TURN</span></div>
+                <div id="comm-slot-4" class="card-slot w-[42px] h-[63px] border border-dashed border-yellow-400/35 bg-black/25 flex items-center justify-center"><span class="text-[8px] font-bold text-yellow-200/35">RIVER</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- [12 o'clock / 0°] Dealer & Golden Card Shoe (莊家發牌靴) -->
+        <div class="radial-seat pos-dealer flex flex-col items-center">
+          <div class="ios-glass px-2.5 py-1 rounded-2xl flex items-center gap-2 border border-yellow-400/60 shadow-lg">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-b from-amber-300 to-yellow-600 p-0.5 flex items-center justify-center shadow">
+              <div class="w-full h-full rounded-full bg-emerald-950 flex items-center justify-center text-xs font-black text-yellow-300">
+                莊
+              </div>
+            </div>
+            <div class="flex flex-col pr-1">
+              <span class="text-[10px] font-black text-yellow-300 leading-tight">皇家荷官</span>
+              <span id="deckCounterText" class="text-[9px] text-emerald-200/85">牌靴 50 張</span>
+            </div>
+            <!-- Physical Card Shoe Origin for Flying Cards -->
+            <div id="dealerShoeBox" class="relative w-7 h-10 rounded-md bg-gradient-to-br from-yellow-500 via-amber-700 to-stone-900 p-[2px] shadow-inner border border-yellow-300 flex items-center justify-center">
+              <div class="w-full h-full rounded-[4px] bg-[#083520] border border-yellow-400/60 flex items-center justify-center">
+                <span class="text-[9px] font-black text-yellow-300">贏</span>
+              </div>
+              <div class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping hidden" id="dealerPulseDot"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- [10 o'clock / 300°] Seat 1: AI Sanchez -->
+        <div id="seat-1" class="radial-seat pos-seat-1"></div>
+
+        <!-- [2 o'clock / 60°] Seat 4: AI Lula -->
+        <div id="seat-4" class="radial-seat pos-seat-4"></div>
+
+        <!-- [8 o'clock / 240°] Seat 2: AI Takaichi -->
+        <div id="seat-2" class="radial-seat pos-seat-2"></div>
+
+        <!-- [4 o'clock / 120°] Seat 3: AI Modi -->
+        <div id="seat-3" class="radial-seat pos-seat-3"></div>
+
+        <!-- [6 o'clock / 180°] Seat 0: Human Player -->
+        <div class="radial-seat pos-seat-0 flex flex-col items-center">
+          <!-- Real-time Evaluated Hand Rank Badge -->
+          <div id="humanRankBadge" class="mb-1 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-500/35 via-yellow-400/40 to-amber-500/35 border border-yellow-300 text-yellow-100 text-[11px] font-black tracking-wide shadow hidden">
+            目前牌型：單張
+          </div>
+
+          <div class="flex items-center justify-center gap-2.5">
+            <!-- Human Avatar & Chip Stack -->
+            <div id="humanSeatCard" class="ios-glass rounded-2xl px-2.5 py-1.5 flex items-center gap-2 shadow-xl">
+              <div class="relative w-10 h-10 rounded-full bg-emerald-900 border-2 border-yellow-400 overflow-hidden flex-shrink-0 shadow" id="humanAvatarBox"></div>
+              <div class="flex flex-col">
+                <div class="flex items-center gap-1">
+                  <span class="text-[11px] font-black text-white">玩家 (你)</span>
+                  <span id="humanStatusTag" class="text-[9px] font-bold px-1.5 py-0.2 bg-amber-400 text-black rounded-full hidden"></span>
+                </div>
+                <span id="humanChipsDisplay" class="text-xs font-black text-yellow-300">$5,000</span>
+                <span id="humanBetDisplay" class="text-[9px] text-emerald-300">已下: $0</span>
+              </div>
+            </div>
+
+            <!-- 2 Persistent Human Hole Card Slots -->
+            <div id="humanHoleCards" class="flex items-center gap-1.5">
+              <div id="player-0-slot-0" class="card-slot w-[56px] h-[84px] border border-dashed border-yellow-400/35 bg-black/25 flex items-center justify-center text-[9px] text-white/30">底牌 1</div>
+              <div id="player-0-slot-1" class="card-slot w-[56px] h-[84px] border border-dashed border-yellow-400/35 bg-black/25 flex items-center justify-center text-[9px] text-white/30">底牌 2</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- 3. Bottom Interactive Betting Action Bar -->
+    <footer class="relative z-30 px-3 pt-1 pb-2.5 bg-gradient-to-t from-black/95 via-black/75 to-transparent">
+      <!-- Raise Quick Selector Row -->
+      <div id="raiseSelectorRow" class="hidden mb-1.5 flex items-center justify-center gap-2">
+        <span class="text-[11px] text-yellow-200 font-bold">選擇加注金額：</span>
+        <button onclick="humanAction('RAISE', 200)" class="px-2.5 py-1 rounded-full bg-amber-500 text-black font-black text-xs shadow active:scale-95">+ $200</button>
+        <button onclick="humanAction('RAISE', 500)" class="px-2.5 py-1 rounded-full bg-amber-400 text-black font-black text-xs shadow active:scale-95">+ $500</button>
+        <button onclick="humanAction('RAISE', 1000)" class="px-2.5 py-1 rounded-full bg-yellow-300 text-black font-black text-xs shadow active:scale-95">+ $1,000</button>
+      </div>
+
+      <!-- Primary 4 Action Buttons -->
+      <div class="grid grid-cols-4 gap-2" id="actionButtonsGrid">
+        <button id="btnFold" onclick="humanAction('FOLD')" disabled
+          class="py-2.5 rounded-2xl font-black text-xs text-white bg-gradient-to-b from-slate-600 to-slate-800 border border-slate-400/30 shadow-lg disabled:opacity-40 active:scale-95 transition">
+          棄牌 Fold
+        </button>
+
+        <button id="btnCall" onclick="humanAction('CALL')" disabled
+          class="py-2.5 rounded-2xl font-black text-xs text-white bg-gradient-to-b from-sky-500 to-blue-700 border border-sky-300/40 shadow-lg disabled:opacity-40 active:scale-95 transition">
+          <span id="btnCallLabel">過牌 Check</span>
+        </button>
+
+        <button id="btnRaise" onclick="toggleRaiseSelector()" disabled
+          class="py-2.5 rounded-2xl font-black text-xs text-black bg-gradient-to-b from-yellow-300 via-amber-400 to-amber-600 border border-yellow-100/60 shadow-lg disabled:opacity-40 active:scale-95 transition">
+          加注 Raise
+        </button>
+
+        <button id="btnAllIn" onclick="humanAction('ALLIN')" disabled
+          class="py-2.5 rounded-2xl font-black text-xs text-white bg-gradient-to-b from-rose-500 via-red-600 to-red-800 border border-rose-300/50 shadow-lg disabled:opacity-40 active:scale-95 transition">
+          ALL IN
+        </button>
+      </div>
+
+      <!-- Start New Hand Floating Trigger -->
+      <div id="startHandOverlayBar" class="mt-1.5">
+        <button onclick="startNewHand()"
+          class="w-full py-2.5 rounded-2xl font-black text-sm text-black bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 shadow-[0_0_24px_rgba(250,204,21,0.65)] border border-yellow-100 active:scale-98 transition flex items-center justify-center gap-2">
+          <span>🃏 發牌開局（莊家順時針發牌）</span>
+        </button>
+      </div>
+    </footer>
+
+    <!-- 4. Showdown Winner Announcement Modal -->
+    <div id="showdownModal" class="hidden absolute inset-0 z-40 bg-black/75 backdrop-blur-md flex items-center justify-center p-5">
+      <div class="ios-glass w-full max-w-sm rounded-3xl p-5 border-2 border-yellow-400 shadow-2xl flex flex-col items-center text-center">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-300 to-amber-600 flex items-center justify-center text-2xl shadow-lg mb-2">
+          🏆
+        </div>
+        <h2 id="winnerModalTitle" class="text-lg font-black gold-gradient-text mb-1">攤牌結算</h2>
+        <p id="winnerModalDesc" class="text-xs text-emerald-100 font-semibold mb-3 leading-relaxed"></p>
+
+        <!-- All Active Players Hand Breakdown -->
+        <div id="showdownBreakdownList" class="w-full space-y-1.5 mb-4 max-h-48 overflow-y-auto pr-1 text-left"></div>
+
+        <button onclick="startNewHand()"
+          class="w-full py-3 rounded-2xl font-black text-sm text-black bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 shadow-lg active:scale-95 transition">
+          繼續下一局 ➔
+        </button>
+      </div>
+    </div>
+
+    <!-- 5. Rules & 10-Character Card Gallery Modal -->
+    <div id="rulesModal" class="hidden absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+      <div class="ios-glass w-full max-w-sm max-h-[86dvh] rounded-3xl p-4 border border-yellow-400/60 flex flex-col justify-between overflow-hidden">
+        <div class="flex items-center justify-between border-b border-white/15 pb-2.5">
+          <h3 class="text-base font-black gold-gradient-text">《全民大贏家》圓桌規則與角色圖鑑</h3>
+          <button onclick="toggleRulesModal(false)" class="w-7 h-7 rounded-full bg-white/10 text-xs font-bold">✕</button>
+        </div>
+
+        <div class="overflow-y-auto py-3 space-y-3 text-xs leading-relaxed pr-1">
+          <div class="bg-emerald-950/70 p-3 rounded-2xl border border-emerald-500/30">
+            <div class="font-black text-yellow-300 mb-1">🎯 純圖像配對計分制（無花色、無順子、無點數比大小）</div>
+            <p class="text-white/85 text-[11px]">
+              全牌靴共 <strong>50 張牌</strong>（10 位世界領袖角色 × 每人 5 張相同卡牌）。每位玩家發 2 張底牌，搭配桌面 5 張公共牌（Flop 3 + Turn 1 + River 1），只看<strong>相同角色圖片湊成的數量</strong>決定勝負！若最終牌型相同則平手均分底池。
+            </p>
+          </div>
+
+          <div class="space-y-1">
+            <div class="font-black text-yellow-300 mb-1">👑 贏牌牌型大小（由高至低）：</div>
+            <div class="flex justify-between bg-white/5 px-2.5 py-1 rounded-lg"><span>1. <strong>五鐵</strong> (Five of a Kind)</span><span class="text-yellow-300 font-bold">5張相同角色</span></div>
+            <div class="flex justify-between bg-white/5 px-2.5 py-1 rounded-lg"><span>2. <strong>鐵支</strong> (Four of a Kind)</span><span class="text-yellow-300 font-bold">4張相同角色</span></div>
+            <div class="flex justify-between bg-white/5 px-2.5 py-1 rounded-lg"><span>3. <strong>葫蘆</strong> (Full House)</span><span class="text-yellow-300 font-bold">3張同角 + 2張同角</span></div>
+            <div class="flex justify-between bg-white/5 px-2.5 py-1 rounded-lg"><span>4. <strong>三條</strong> (Three of a Kind)</span><span class="text-yellow-300 font-bold">3張相同角色</span></div>
+            <div class="flex justify-between bg-white/5 px-2.5 py-1 rounded-lg"><span>5. <strong>兩對</strong> (Two Pair)</span><span class="text-yellow-300 font-bold">2組不同的一對</span></div>
+            <div class="flex justify-between bg-white/5 px-2.5 py-1 rounded-lg"><span>6. <strong>一對</strong> (One Pair)</span><span class="text-yellow-300 font-bold">2張相同角色</span></div>
+            <div class="flex justify-between bg-white/5 px-2.5 py-1 rounded-lg"><span>7. <strong>單張</strong> (High Card)</span><span class="text-white/70">無重複則平手分池</span></div>
+          </div>
+
+          <div>
+            <div class="font-black text-yellow-300 mb-1.5">🌟 10 位 Q 版寫實人物卡組（每人各 5 張）：</div>
+            <div id="characterGalleryGrid" class="grid grid-cols-5 gap-1.5"></div>
+          </div>
+        </div>
+
+        <button onclick="toggleRulesModal(false)"
+          class="mt-2 w-full py-2.5 rounded-xl font-black text-xs text-black bg-yellow-400">
+          開始體驗遊戲
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    /********************************************************************
+     * 1. 10 位世界領袖 Q 版寫實角色定義 & 高精細向量肖像渲染器
+     ********************************************************************/
+    const CHARACTERS = [
+      {
+        id: 'zelenskyy',
+        name: '澤倫斯基',
+        badge: '🇺🇦',
+        themeColor: '#2563eb',
+        skin: '#f3ccb0',
+        hair: '#3b281e',
+        hairStyle: 'short_crop',
+        beard: 'stubble',
+        glasses: false,
+        suit: '#2e3829',
+        tie: '#1e3a2f',
+        feature: 'olive_suit'
+      },
+      {
+        id: 'sanchez',
+        name: '桑切斯',
+        badge: '🇪🇸',
+        themeColor: '#dc2626',
+        skin: '#f0c4a6',
+        hair: '#2a292e',
+        hairStyle: 'silver_temples',
+        beard: 'none',
+        glasses: false,
+        suit: '#172554',
+        tie: '#dc2626',
+        feature: 'red_tie'
+      },
+      {
+        id: 'modi',
+        name: '莫迪',
+        badge: '🇮🇳',
+        themeColor: '#ea580c',
+        skin: '#e0ac8b',
+        hair: '#f1f5f9',
+        hairStyle: 'white_short',
+        beard: 'full_white',
+        glasses: 'rimless',
+        suit: '#334155',
+        tie: '#f8fafc',
+        feature: 'vest'
+      },
+      {
+        id: 'netanyahu',
+        name: '納坦雅胡',
+        badge: '🇮🇱',
+        themeColor: '#0284c7',
+        skin: '#f4d0b8',
+        hair: '#cbd5e1',
+        hairStyle: 'side_part_silver',
+        beard: 'none',
+        glasses: false,
+        suit: '#0f172a',
+        tie: '#2563eb',
+        feature: 'pin'
+      },
+      {
+        id: 'albanese',
+        name: '艾班尼斯',
+        badge: '🇦🇺',
+        themeColor: '#0d9488',
+        skin: '#f5cdb4',
+        hair: '#94a3b8',
+        hairStyle: 'side_part_grey',
+        beard: 'none',
+        glasses: 'black_frame',
+        suit: '#1e3a5f',
+        tie: '#d6c79c',
+        feature: 'glasses'
+      },
+      {
+        id: 'lula',
+        name: '魯拉',
+        badge: '🇧🇷',
+        themeColor: '#16a34a',
+        skin: '#ebb898',
+        hair: '#e2e8f0',
+        hairStyle: 'wavy_white',
+        beard: 'full_grey',
+        glasses: false,
+        suit: '#0c4a6e',
+        tie: '#db2777',
+        feature: 'sash'
+      },
+      {
+        id: 'lee',
+        name: '李在明',
+        badge: '🇰🇷',
+        themeColor: '#4f46e5',
+        skin: '#f6d5be',
+        hair: '#1e1b18',
+        hairStyle: 'neat_black',
+        beard: 'none',
+        glasses: 'round_wire',
+        suit: '#334155',
+        tie: '#1e3a8a',
+        feature: 'kr_pin'
+      },
+      {
+        id: 'carney',
+        name: '卡尼',
+        badge: '🇨🇦',
+        themeColor: '#e11d48',
+        skin: '#f2c8ad',
+        hair: '#9ca3af',
+        hairStyle: 'sleek_silver',
+        beard: 'none',
+        glasses: false,
+        suit: '#1e293b',
+        tie: '#0284c7',
+        feature: 'dotted_tie'
+      },
+      {
+        id: 'takaichi',
+        name: '高市早苗',
+        badge: '🇯🇵',
+        themeColor: '#2563eb',
+        skin: '#fae0ce',
+        hair: '#1c1917',
+        hairStyle: 'bob_female',
+        beard: 'none',
+        glasses: false,
+        suit: '#1d4ed8',
+        tie: '#fef08a',
+        feature: 'pearls'
+      },
+      {
+        id: 'abe',
+        name: '安倍晉三',
+        badge: '🌸',
+        themeColor: '#7c3aed',
+        skin: '#f1c7ab',
+        hair: '#27272a',
+        hairStyle: 'classic_wave',
+        beard: 'none',
+        glasses: false,
+        suit: '#27272a',
+        tie: '#38bdf8',
+        feature: 'striped_tie'
+      }
+    ];
+
+    /**
+     * Generates a Q-version (Chibi proportion 1:2.2 head-to-body) realistic-shaded SVG portrait
+     */
+    function generateChibiPortraitSVG(char) {
+      const gradId = `skin_${char.id}`;
+      const bgId = `bg_${char.id}`;
+
+      let hairMarkup = '';
+      if (char.hairStyle === 'bob_female') {
+        hairMarkup = `
+          <path d="M18,46 C15,20 35,12 50,12 C65,12 85,20 82,46 C80,32 72,24 50,24 C28,24 20,32 18,46 Z" fill="${char.hair}"/>
+          <path d="M22,25 L28,36 L34,24 L42,35 L50,23 L58,35 L66,24 L74,34" stroke="${char.hair}" stroke-width="3.5" stroke-linecap="round"/>
+        `;
+      } else if (char.hairStyle === 'silver_temples') {
+        hairMarkup = `
+          <path d="M20,38 C18,16 35,11 50,11 C65,11 82,16 80,38 C75,23 64,19 50,19 C36,19 25,23 20,38 Z" fill="${char.hair}"/>
+          <path d="M20,32 C20,38 22,43 24,45" stroke="#e2e8f0" stroke-width="4" stroke-linecap="round"/>
+          <path d="M80,32 C80,38 78,43 76,45" stroke="#e2e8f0" stroke-width="4" stroke-linecap="round"/>
+        `;
+      } else {
+        hairMarkup = `
+          <path d="M20,39 C17,16 33,10 50,10 C67,10 83,16 80,39 C75,24 65,19 50,19 C35,19 25,24 20,39 Z" fill="${char.hair}"/>
+        `;
+      }
+
+      let beardMarkup = '';
+      if (char.beard === 'full_white' || char.beard === 'full_grey') {
+        const bColor = char.beard === 'full_white' ? '#f8fafc' : '#cbd5e1';
+        beardMarkup = `
+          <path d="M24,48 C24,69 37,77 50,77 C63,77 76,69 76,48 C72,56 64,61 50,61 C36,61 28,56 24,48 Z" fill="${bColor}" stroke="#94a3b8" stroke-width="1"/>
+          <path d="M36,56 Q50,51 64,56" stroke="${bColor}" stroke-width="5" stroke-linecap="round" fill="none"/>
+        `;
+      } else if (char.beard === 'stubble') {
+        beardMarkup = `
+          <path d="M27,52 C29,67 39,72 50,72 C61,72 71,67 73,52 C68,61 60,65 50,65 C40,65 32,61 27,52 Z" fill="rgba(55,40,30,0.25)"/>
+        `;
+      }
+
+      let glassesMarkup = '';
+      if (char.glasses === 'black_frame') {
+        glassesMarkup = `
+          <g stroke="#111827" stroke-width="2.6" fill="rgba(255,255,255,0.15)">
+            <rect x="27" y="36" width="18" height="12" rx="3"/>
+            <rect x="55" y="36" width="18" height="12" rx="3"/>
+            <line x1="45" y1="41" x2="55" y2="41"/>
+          </g>
+        `;
+      } else if (char.glasses === 'round_wire' || char.glasses === 'rimless') {
+        const strokeCol = char.glasses === 'rimless' ? '#94a3b8' : '#334155';
+        glassesMarkup = `
+          <g stroke="${strokeCol}" stroke-width="1.6" fill="rgba(255,255,255,0.14)">
+            <circle cx="36" cy="42" r="8.5"/>
+            <circle cx="64" cy="42" r="8.5"/>
+            <line x1="44.5" y1="42" x2="55.5" y2="42"/>
+          </g>
+        `;
+      }
+
+      let accessoryMarkup = '';
+      if (char.feature === 'pearls') {
+        accessoryMarkup = `
+          <path d="M37,77 Q50,86 63,77" stroke="#fef9c3" stroke-width="3.5" stroke-dasharray="1 4" stroke-linecap="round" fill="none"/>
+        `;
+      } else if (char.feature === 'sash') {
+        accessoryMarkup = `
+          <path d="M22,76 L68,100 L78,100 L32,73 Z" fill="#22c55e"/>
+          <path d="M25,75 L71,100 L75,100 L29,74 Z" fill="#facc15"/>
+        `;
+      }
+
+      return `
+        <svg viewBox="0 0 100 100" class="w-full h-full block">
+          <defs>
+            <radialGradient id="${bgId}" cx="50%" cy="35%" r="70%">
+              <stop offset="0%" stop-color="${char.themeColor}" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#0f172a" stop-opacity="0.95"/>
+            </radialGradient>
+            <radialGradient id="${gradId}" cx="45%" cy="38%" r="60%">
+              <stop offset="0%" stop-color="#fff1e6"/>
+              <stop offset="55%" stop-color="${char.skin}"/>
+              <stop offset="100%" stop-color="#c68b65"/>
+            </radialGradient>
+          </defs>
+
+          <rect width="100" height="100" rx="8" fill="url(#${bgId})"/>
+
+          <!-- Chibi Shoulders & Suit -->
+          <path d="M14,100 C16,76 30,71 50,71 C70,71 84,76 86,100 Z" fill="${char.suit}"/>
+          <polygon points="41,71 59,71 54,96 46,96" fill="#ffffff"/>
+          <polygon points="47,74 53,74 55,98 45,98" fill="${char.tie}"/>
+          ${accessoryMarkup}
+
+          <!-- Ears -->
+          <circle cx="21" cy="46" r="5.5" fill="${char.skin}"/>
+          <circle cx="79" cy="46" r="5.5" fill="${char.skin}"/>
+
+          <!-- Big Q-Version Realistic Shaded Head -->
+          <rect x="23" y="16" width="54" height="56" rx="26" fill="url(#${gradId})" stroke="rgba(120,70,45,0.25)" stroke-width="1"/>
+
+          <!-- Subtle Cheek Warmth -->
+          <ellipse cx="32" cy="50" rx="5" ry="2.8" fill="rgba(239,68,68,0.18)"/>
+          <ellipse cx="68" cy="50" rx="5" ry="2.8" fill="rgba(239,68,68,0.18)"/>
+
+          <!-- Eyebrows -->
+          <path d="M29,34 Q36,31 43,34" stroke="${char.hair}" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+          <path d="M57,34 Q64,31 71,34" stroke="${char.hair}" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+
+          <!-- Expressive Realistic Eyes -->
+          <ellipse cx="36" cy="42" rx="4.3" ry="3.6" fill="#ffffff"/>
+          <circle cx="36" cy="42" r="2.5" fill="#291d16"/>
+          <circle cx="35" cy="41" r="0.9" fill="#ffffff"/>
+
+          <ellipse cx="64" cy="42" rx="4.3" ry="3.6" fill="#ffffff"/>
+          <circle cx="64" cy="42" r="2.5" fill="#291d16"/>
+          <circle cx="63" cy="41" r="0.9" fill="#ffffff"/>
+
+          <!-- Nose Bridge & Tip -->
+          <path d="M50,39 L48,49 Q50,51 53,49" stroke="rgba(140,80,50,0.45)" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+
+          ${beardMarkup}
+
+          <!-- Confident Gentle Smile -->
+          <path d="M40,57 Q50,63 60,57" stroke="#994636" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+
+          ${glassesMarkup}
+          ${hairMarkup}
+        </svg>
+      `;
+    }
+
+    /********************************************************************
+     * 2. Web Audio API 合成器：Chill R&B 電鋼琴背景樂 + 7 大高擬真音效
+     ********************************************************************/
+    class GameSoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+        this.bgmTimer = null;
+        this.chordIndex = 0;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioCtx();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      startChillRnBLoop() {
+        this.init();
+        if (this.bgmTimer || !this.enabled) return;
+
+        // Neo-soul Rhodes electric piano progression (Fmaj9 -> Em7 -> Dm9 -> Cmaj9)
+        const chords = [
+          [174.61, 220.00, 261.63, 329.63, 392.00],
+          [164.81, 196.00, 246.94, 293.66, 392.00],
+          [146.83, 174.61, 220.00, 261.63, 329.63],
+          [130.81, 164.81, 196.00, 246.94, 293.66]
+        ];
+
+        const playChordStep = () => {
+          if (!this.enabled || !this.ctx) return;
+          const now = this.ctx.currentTime;
+          const notes = chords[this.chordIndex % chords.length];
+          this.chordIndex++;
+
+          notes.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = idx === 0 ? 'sine' : 'triangle';
+            osc.frequency.setValueAtTime(freq, now);
+
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.linearRampToValueAtTime(idx === 0 ? 0.035 : 0.016, now + 0.15);
+            gain.gain.exponentialRampToValueAtTime(0.0008, now + 2.3);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 2.35);
+          });
+        };
+
+        playChordStep();
+        this.bgmTimer = setInterval(playChordStep, 2400);
+      }
+
+      stopBGM() {
+        if (this.bgmTimer) {
+          clearInterval(this.bgmTimer);
+          this.bgmTimer = null;
+        }
+      }
+
+      playSFX(type) {
+        if (!this.enabled) return;
+        this.init();
+        const now = this.ctx.currentTime;
+
+        switch (type) {
+          case 'deal': {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(320, now);
+            osc.frequency.exponentialRampToValueAtTime(110, now + 0.075);
+            gain.gain.setValueAtTime(0.14, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.075);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.08);
+            break;
+          }
+          case 'flip': {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(480, now);
+            osc.frequency.exponentialRampToValueAtTime(880, now + 0.065);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.075);
+            break;
+          }
+          case 'chip': {
+            [2400, 3250].forEach((freq, i) => {
+              const osc = this.ctx.createOscillator();
+              const gain = this.ctx.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(freq, now + i * 0.035);
+              gain.gain.setValueAtTime(0.08, now + i * 0.035);
+              gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.035 + 0.09);
+              osc.connect(gain);
+              gain.connect(this.ctx.destination);
+              osc.start(now + i * 0.035);
+              osc.stop(now + i * 0.035 + 0.095);
+            });
+            break;
+          }
+          case 'allIn': {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(130, now);
+            osc.frequency.exponentialRampToValueAtTime(48, now + 0.55);
+            gain.gain.setValueAtTime(0.22, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.62);
+            break;
+          }
+          case 'fold': {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(240, now);
+            osc.frequency.exponentialRampToValueAtTime(95, now + 0.16);
+            gain.gain.setValueAtTime(0.09, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.18);
+            break;
+          }
+          case 'win': {
+            [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+              const osc = this.ctx.createOscillator();
+              const gain = this.ctx.createGain();
+              osc.type = 'triangle';
+              osc.frequency.setValueAtTime(freq, now + i * 0.09);
+              gain.gain.setValueAtTime(0.14, now + i * 0.09);
+              gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.09 + 0.5);
+              osc.connect(gain);
+              gain.connect(this.ctx.destination);
+              osc.start(now + i * 0.09);
+              osc.stop(now + i * 0.09 + 0.52);
+            });
+            break;
+          }
+          case 'lose': {
+            [349.23, 293.66, 220.00].forEach((freq, i) => {
+              const osc = this.ctx.createOscillator();
+              const gain = this.ctx.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(freq, now + i * 0.14);
+              gain.gain.setValueAtTime(0.1, now + i * 0.14);
+              gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.14 + 0.38);
+              osc.connect(gain);
+              gain.connect(this.ctx.destination);
+              osc.start(now + i * 0.14);
+              osc.stop(now + i * 0.14 + 0.4);
+            });
+            break;
+          }
+        }
+      }
+    }
+
+    const sound = new GameSoundEngine();
+
+    function toggleAudio() {
+      sound.enabled = !sound.enabled;
+      document.getElementById('audioIcon').textContent = sound.enabled ? '🔊' : '🔇';
+      if (sound.enabled) {
+        sound.startChillRnBLoop();
+      } else {
+        sound.stopBGM();
+      }
+    }
+
+    /********************************************************************
+     * 3. 純圖像配對牌型評估器 (HandEvaluator - 無花色、無順子、無點數比大小)
+     ********************************************************************/
+    const HAND_RANK_INFO = {
+      FIVE_KIND:  { rank: 7, name: '五鐵' },
+      FOUR_KIND:  { rank: 6, name: '鐵支' },
+      FULL_HOUSE: { rank: 5, name: '葫蘆' },
+      THREE_KIND: { rank: 4, name: '三條' },
+      TWO_PAIR:   { rank: 3, name: '兩對' },
+      ONE_PAIR:   { rank: 2, name: '一對' },
+      HIGH_CARD:  { rank: 1, name: '單張' }
+    };
+
+    function evaluatePureMatchingHand(holeCards, commCards) {
+      const allCards = [...holeCards, ...commCards];
+      const groups = {};
+
+      for (const c of allCards) {
+        if (!groups[c.char.id]) groups[c.char.id] = [];
+        groups[c.char.id].push(c);
+      }
+
+      const sortedGroups = Object.values(groups).sort((a, b) => b.length - a.length);
+      const counts = sortedGroups.map(g => g.length);
+      const maxCount = counts[0] || 0;
+
+      let rankObj = HAND_RANK_INFO.HIGH_CARD;
+      let matchedIds = new Set();
+      let detailText = '單張（各1張）';
+
+      if (maxCount >= 5) {
+        rankObj = HAND_RANK_INFO.FIVE_KIND;
+        sortedGroups[0].slice(0, 5).forEach(c => matchedIds.add(c.uid));
+        detailText = `五鐵（5張${sortedGroups[0][0].char.name}）`;
+      } else if (maxCount === 4) {
+        rankObj = HAND_RANK_INFO.FOUR_KIND;
+        sortedGroups[0].forEach(c => matchedIds.add(c.uid));
+        detailText = `鐵支（4張${sortedGroups[0][0].char.name}）`;
+      } else if (maxCount === 3 && counts.length > 1 && counts[1] >= 2) {
+        rankObj = HAND_RANK_INFO.FULL_HOUSE;
+        sortedGroups[0].forEach(c => matchedIds.add(c.uid));
+        sortedGroups[1].slice(0, 2).forEach(c => matchedIds.add(c.uid));
+        detailText = `葫蘆（3張${sortedGroups[0][0].char.name} + 2張${sortedGroups[1][0].char.name}）`;
+      } else if (maxCount === 3) {
+        rankObj = HAND_RANK_INFO.THREE_KIND;
+        sortedGroups[0].forEach(c => matchedIds.add(c.uid));
+        detailText = `三條（3張${sortedGroups[0][0].char.name}）`;
+      } else if (maxCount === 2 && counts.length > 1 && counts[1] === 2) {
+        rankObj = HAND_RANK_INFO.TWO_PAIR;
+        sortedGroups[0].forEach(c => matchedIds.add(c.uid));
+        sortedGroups[1].forEach(c => matchedIds.add(c.uid));
+        detailText = `兩對（${sortedGroups[0][0].char.name} & ${sortedGroups[1][0].char.name}）`;
+      } else if (maxCount === 2) {
+        rankObj = HAND_RANK_INFO.ONE_PAIR;
+        sortedGroups[0].forEach(c => matchedIds.add(c.uid));
+        detailText = `一對（2張${sortedGroups[0][0].char.name}）`;
+      }
+
+      return {
+        rank: rankObj.rank,
+        title: rankObj.name,
+        detail: detailText,
+        maxCount: Math.min(maxCount, 5),
+        matchedCardIds: matchedIds
+      };
+    }
+
+    /********************************************************************
+     * 4. 遊戲狀態機與 5 人圓桌設定 (莊家 + 1 人類 + 4 AI 平均圍繞圓桌)
+     ********************************************************************/
+    const players = [
+      { id: 0, name: '玩家 (你)', isHuman: true, personality: 'HUMAN', personalityLabel: '玩家', char: CHARACTERS[0], chips: 5000, bet: 0, holeCards: [], folded: false, allIn: false, status: '' },
+      { id: 1, name: '桑切斯', isHuman: false, personality: 'AGGRESSIVE', personalityLabel: '🔥進攻', char: CHARACTERS[1], chips: 5000, bet: 0, holeCards: [], folded: false, allIn: false, status: '' },
+      { id: 2, name: '高市早苗', isHuman: false, personality: 'CONSERVATIVE', personalityLabel: '🛡️保守', char: CHARACTERS[8], chips: 5000, bet: 0, holeCards: [], folded: false, allIn: false, status: '' },
+      { id: 3, name: '莫迪', isHuman: false, personality: 'CALLER', personalityLabel: '🤝跟注', char: CHARACTERS[2], chips: 5000, bet: 0, holeCards: [], folded: false, allIn: false, status: '' },
+      { id: 4, name: '魯拉', isHuman: false, personality: 'BLUFFER', personalityLabel: '🎭詐唬', char: CHARACTERS[5], chips: 5000, bet: 0, holeCards: [], folded: false, allIn: false, status: '' }
+    ];
+
+    let deck = [];
+    let communityCards = [];
+    let pot = 0;
+    let currentHighBet = 0;
+    let stage = 'IDLE'; // IDLE, PREFLOP, FLOP, TURN, RIVER, SHOWDOWN
+    let activeTurnIndex = -1;
+    let isProcessingTurn = false;
+
+    const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+
+    function buildAndShuffleDeck() {
+      deck = [];
+      let uidCounter = 1;
+      for (const char of CHARACTERS) {
+        for (let copy = 0; copy < 5; copy++) {
+          deck.push({
+            uid: `card_${uidCounter++}`,
+            char: char,
+            faceUp: false
+          });
+        }
+      }
+      for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+      }
+      updateDeckCounterUI();
+    }
+
+    function updateDeckCounterUI() {
+      const el = document.getElementById('deckCounterText');
+      if (el) el.textContent = `牌靴 ${deck.length} 張`;
+    }
+
+    function setBroadcast(msg) {
+      document.getElementById('tableBroadcast').textContent = msg;
+    }
+
+    /********************************************************************
+     * 5. 非破壞性卡槽系統 & 莊家發牌軌跡飛行系統 (已持有的牌組完全不受影響)
+     ********************************************************************/
+    function buildSeatDOMStructureOnce() {
+      for (let i = 1; i <= 4; i++) {
+        const bot = players[i];
+        const seatEl = document.getElementById(`seat-${i}`);
+        seatEl.innerHTML = `
+          <div id="seat-box-${i}" class="ios-glass rounded-2xl p-1.5 w-[112px] flex flex-col gap-1 transition shadow-lg">
+            <div class="flex items-center gap-1">
+              <div class="w-7 h-7 rounded-full overflow-hidden border border-yellow-400/80 flex-shrink-0 bg-slate-800">
+                ${generateChibiPortraitSVG(bot.char)}
+              </div>
+              <div class="flex flex-col min-w-0 flex-1">
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] font-black text-white truncate">${bot.name}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span id="bot-chips-${i}" class="text-[10px] font-black text-yellow-300">$${bot.chips.toLocaleString()}</span>
+                  <span class="text-[8px] text-emerald-300">${bot.personalityLabel}</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center justify-between pt-0.5">
+              <!-- Persistent 2 Hole Card Slots for AI -->
+              <div class="flex gap-1">
+                <div id="player-${i}-slot-0" class="card-slot w-[30px] h-[45px] border border-white/15 bg-black/25"></div>
+                <div id="player-${i}-slot-1" class="card-slot w-[30px] h-[45px] border border-white/15 bg-black/25"></div>
+              </div>
+              <div class="flex flex-col items-end min-w-[36px]">
+                <span id="bot-status-${i}" class="text-[9px] font-black px-1 py-0.2 rounded-full bg-amber-400 text-black shadow hidden"></span>
+                <span id="bot-bet-${i}" class="text-[8px] text-white/65 mt-0.5">$0</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function createSingleCardInnerMarkup(card) {
+      if (!card.faceUp) {
+        return `
+          <div class="poker-card card-landed bg-[#083520] p-[2.5px] border border-yellow-400/85 flex items-center justify-center" data-card-uid="${card.uid}" data-face="down">
+            <div class="w-full h-full rounded-[5px] border border-yellow-500/40 bg-[radial-gradient(circle_at_center,#0f4d30_0%,#062315_100%)] flex items-center justify-center">
+              <div class="w-5 h-5 rounded-full border border-yellow-400/60 flex items-center justify-center bg-black/30">
+                <span class="text-[9px] font-black text-yellow-300">贏</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="poker-card card-landed bg-white p-[2px] border-2 border-yellow-500 flex flex-col justify-between overflow-hidden" data-card-uid="${card.uid}" data-face="up">
+          <div class="flex items-center justify-between px-0.5 pt-[1px] leading-none">
+            <span class="text-[8px]">${card.char.badge}</span>
+            <span class="w-1.5 h-1.5 rounded-full" style="background:${card.char.themeColor}"></span>
+          </div>
+          <div class="flex-1 w-full overflow-hidden rounded-[3px] my-[1px]">
+            ${generateChibiPortraitSVG(card.char)}
+          </div>
+          <div class="bg-slate-900 text-white text-[8px] font-black text-center py-[1px] rounded-b-[3px] tracking-tighter truncate">
+            ${card.char.name}
+          </div>
+        </div>
+      `;
+    }
+
+    /**
+     * Animates a physical card flying from the Dealer's Shoe (12 o'clock)
+     * directly into the target slot element without touching any other card slots.
+     */
+    async function animateDealFromDealerToSlot(card, targetSlotId) {
+      const shoeEl = document.getElementById('dealerShoeBox');
+      const targetSlot = document.getElementById(targetSlotId);
+      const pulseDot = document.getElementById('dealerPulseDot');
+      if (!shoeEl || !targetSlot) return;
+
+      if (pulseDot) pulseDot.classList.remove('hidden');
+      updateDeckCounterUI();
+
+      const shoeRect = shoeEl.getBoundingClientRect();
+      const targetRect = targetSlot.getBoundingClientRect();
+
+      // Create temporary flying card at Dealer's Shoe
+      const flyer = document.createElement('div');
+      flyer.className = 'flying-card flex items-center justify-center';
+      flyer.style.left = `${shoeRect.left}px`;
+      flyer.style.top = `${shoeRect.top}px`;
+      flyer.style.width = `${shoeRect.width}px`;
+      flyer.style.height = `${shoeRect.height}px`;
+      flyer.style.transform = 'rotate(-160deg) scale(0.85)';
+      flyer.innerHTML = `
+        <div class="w-full h-full rounded-[4px] border border-yellow-500/40 bg-[#0c4a2c] flex items-center justify-center">
+          <span class="text-[8px] font-black text-yellow-300">贏</span>
+        </div>
+      `;
+      document.body.appendChild(flyer);
+
+      sound.playSFX('deal');
+
+      // Trigger reflow and fly to target slot coordinates
+      flyer.getBoundingClientRect();
+      flyer.style.left = `${targetRect.left}px`;
+      flyer.style.top = `${targetRect.top}px`;
+      flyer.style.width = `${targetRect.width}px`;
+      flyer.style.height = `${targetRect.height}px`;
+      flyer.style.transform = 'rotate(0deg) scale(1)';
+
+      await sleep(310);
+
+      // Remove flying card and populate ONLY this specific slot
+      flyer.remove();
+      if (pulseDot) pulseDot.classList.add('hidden');
+      mountOrUpdateCardSlot(targetSlotId, card);
+    }
+
+    /**
+     * Mounts or updates a single card slot non-destructively.
+     * If the exact same card & face state is already rendered, it only toggles glow classes.
+     */
+    function mountOrUpdateCardSlot(slotId, card, isMatched = false, isWinner = false) {
+      const slotEl = document.getElementById(slotId);
+      if (!slotEl || !card) return;
+
+      const existingCardEl = slotEl.querySelector('.poker-card');
+      const targetFace = card.faceUp ? 'up' : 'down';
+
+      // Only inject HTML if slot is empty or card flipped from down to up
+      if (!existingCardEl || existingCardEl.dataset.cardUid !== card.uid || existingCardEl.dataset.face !== targetFace) {
+        slotEl.className = slotEl.className.replace(/border-dashed|bg-black\/25/g, '').trim();
+        slotEl.innerHTML = createSingleCardInnerMarkup(card);
+      }
+
+      // Non-destructively update highlight classes on the existing DOM element
+      const cardNode = slotEl.querySelector('.poker-card');
+      if (cardNode) {
+        cardNode.classList.toggle('matched-glow', Boolean(isMatched && !isWinner));
+        cardNode.classList.toggle('winning-card', Boolean(isWinner));
+      }
+    }
+
+    function clearAllCardSlotsForNewHand() {
+      for (let i = 0; i < 5; i++) {
+        const slot = document.getElementById(`comm-slot-${i}`);
+        const label = i < 3 ? 'FLOP' : (i === 3 ? 'TURN' : 'RIVER');
+        slot.className = 'card-slot w-[42px] h-[63px] border border-dashed border-yellow-400/35 bg-black/25 flex items-center justify-center';
+        slot.innerHTML = `<span class="text-[8px] font-bold text-yellow-200/35">${label}</span>`;
+      }
+      for (let s = 0; s < 2; s++) {
+        const slot = document.getElementById(`player-0-slot-${s}`);
+        slot.className = 'card-slot w-[56px] h-[84px] border border-dashed border-yellow-400/35 bg-black/25 flex items-center justify-center text-[9px] text-white/30';
+        slot.innerHTML = `底牌 ${s + 1}`;
+      }
+      for (let p = 1; p <= 4; p++) {
+        for (let s = 0; s < 2; s++) {
+          const slot = document.getElementById(`player-${p}-slot-${s}`);
+          if (slot) {
+            slot.className = 'card-slot w-[30px] h-[45px] border border-white/15 bg-black/25';
+            slot.innerHTML = '';
+          }
+        }
+      }
+    }
+
+    /**
+     * Non-destructive UI sync: updates text badges, chip counts, and card glow classes
+     * WITHOUT re-creating or disturbing existing card DOM elements!
+     */
+    function renderTableUI() {
+      const stageNames = {
+        IDLE: '準備開局',
+        PREFLOP: '底牌圈 Pre-Flop',
+        FLOP: '翻牌圈 Flop (3張)',
+        TURN: '轉牌圈 Turn (4張)',
+        RIVER: '河牌圈 River (5張)',
+        SHOWDOWN: '攤牌結算 Showdown'
+      };
+      document.getElementById('stageBadge').textContent = stageNames[stage] || stage;
+      document.getElementById('potDisplay').textContent = `$${pot.toLocaleString()}`;
+
+      const human = players[0];
+      const toCall = Math.max(0, currentHighBet - human.bet);
+      document.getElementById('currentBetInfo').textContent = toCall > 0 ? `需跟 $${toCall}` : `最高 $${currentHighBet}`;
+
+      // Evaluate Human Hand in Real-time
+      const humanEval = evaluatePureMatchingHand(human.holeCards, communityCards);
+      const rankBadge = document.getElementById('humanRankBadge');
+      if (human.holeCards.length > 0) {
+        rankBadge.classList.remove('hidden');
+        rankBadge.textContent = `最佳配對：${humanEval.detail}`;
+      } else {
+        rankBadge.classList.add('hidden');
+      }
+
+      // Sync highlight classes on already-dealt Community Cards (non-destructive)
+      for (let i = 0; i < communityCards.length; i++) {
+        const c = communityCards[i];
+        const isMatched = !human.folded && humanEval.matchedCardIds.has(c.uid);
+        mountOrUpdateCardSlot(`comm-slot-${i}`, c, isMatched, stage === 'SHOWDOWN' && isMatched);
+      }
+
+      // Sync 4 AI Bot Seats
+      for (let i = 1; i <= 4; i++) {
+        const bot = players[i];
+        const seatBox = document.getElementById(`seat-box-${i}`);
+        if (!seatBox) continue;
+
+        seatBox.classList.toggle('active-turn-ring', activeTurnIndex === i);
+        seatBox.classList.toggle('opacity-45', bot.folded);
+        seatBox.classList.toggle('grayscale', bot.folded);
+
+        document.getElementById(`bot-chips-${i}`).textContent = `$${bot.chips.toLocaleString()}`;
+        document.getElementById(`bot-bet-${i}`).textContent = `下 $${bot.bet}`;
+
+        const statusEl = document.getElementById(`bot-status-${i}`);
+        if (bot.status) {
+          statusEl.textContent = bot.status;
+          statusEl.classList.remove('hidden');
+        } else {
+          statusEl.classList.add('hidden');
+        }
+
+        bot.holeCards.forEach((c, idx) => {
+          mountOrUpdateCardSlot(`player-${i}-slot-${idx}`, c, false, false);
+        });
+      }
+
+      // Sync Human Player Info & Hole Cards
+      document.getElementById('humanChipsDisplay').textContent = `$${human.chips.toLocaleString()}`;
+      document.getElementById('humanBetDisplay').textContent = `已下: $${human.bet}`;
+      const humanSeatCard = document.getElementById('humanSeatCard');
+      humanSeatCard.classList.toggle('active-turn-ring', activeTurnIndex === 0);
+
+      const statusTag = document.getElementById('humanStatusTag');
+      if (human.status) {
+        statusTag.textContent = human.status;
+        statusTag.classList.remove('hidden');
+      } else {
+        statusTag.classList.add('hidden');
+      }
+
+      human.holeCards.forEach((c, idx) => {
+        const isMatched = !human.folded && humanEval.matchedCardIds.has(c.uid);
+        mountOrUpdateCardSlot(`player-0-slot-${idx}`, c, isMatched, stage === 'SHOWDOWN' && isMatched);
+      });
+
+      // Update Action Buttons State
+      const canAct = (activeTurnIndex === 0 && !isProcessingTurn && !human.folded && !human.allIn && stage !== 'IDLE' && stage !== 'SHOWDOWN');
+      document.getElementById('btnFold').disabled = !canAct;
+      document.getElementById('btnCall').disabled = !canAct;
+      document.getElementById('btnRaise').disabled = !canAct || human.chips <= toCall;
+      document.getElementById('btnAllIn').disabled = !canAct || human.chips <= 0;
+
+      document.getElementById('btnCallLabel').textContent = toCall > 0 ? `跟注 $${Math.min(toCall, human.chips)}` : '過牌 Check';
+
+      const startBar = document.getElementById('startHandOverlayBar');
+      if (stage === 'IDLE' || stage === 'SHOWDOWN') {
+        startBar.classList.remove('hidden');
+      } else {
+        startBar.classList.add('hidden');
+      }
+    }
+
+    /********************************************************************
+     * 6. 德州撲克順時針圓桌發牌與回合推進邏輯
+     ********************************************************************/
+    // Clockwise order around the circular table starting from Top-Right (2 o'clock)
+    const CLOCKWISE_SEAT_ORDER = [4, 3, 0, 2, 1];
+
+    async function startNewHand() {
+      if (isProcessingTurn && stage !== 'SHOWDOWN' && stage !== 'IDLE') return;
+      sound.startChillRnBLoop();
+      document.getElementById('showdownModal').classList.add('hidden');
+      document.getElementById('raiseSelectorRow').classList.add('hidden');
+
+      players.forEach(p => {
+        if (p.chips < 100) p.chips = 3000;
+        p.holeCards = [];
+        p.bet = 0;
+        p.folded = false;
+        p.allIn = false;
+        p.status = '';
+      });
+
+      clearAllCardSlotsForNewHand();
+      buildAndShuffleDeck();
+      communityCards = [];
+      pot = 0;
+      currentHighBet = 100;
+      stage = 'PREFLOP';
+      activeTurnIndex = -1;
+      isProcessingTurn = true;
+
+      // Deduct $100 Ante from all 5 players
+      players.forEach(p => {
+        const ante = Math.min(100, p.chips);
+        p.chips -= ante;
+        p.bet = ante;
+        pot += ante;
+      });
+      sound.playSFX('chip');
+      setBroadcast('莊家已收底注 $100，開始順時針發放底牌...');
+      renderTableUI();
+      await sleep(240);
+
+      // Deal 2 Hole Cards to each player clockwise from the Dealer's Shoe
+      for (let cardSlotIdx = 0; cardSlotIdx < 2; cardSlotIdx++) {
+        for (const seatIdx of CLOCKWISE_SEAT_ORDER) {
+          const card = deck.pop();
+          card.faceUp = players[seatIdx].isHuman;
+          players[seatIdx].holeCards.push(card);
+
+          await animateDealFromDealerToSlot(card, `player-${seatIdx}-slot-${cardSlotIdx}`);
+          renderTableUI();
+          await sleep(60);
+        }
+      }
+
+      isProcessingTurn = false;
+      activeTurnIndex = 0;
+      setBroadcast('輪到你行動：請選擇過牌、加注或棄牌');
+      renderTableUI();
+    }
+
+    function toggleRaiseSelector() {
+      const row = document.getElementById('raiseSelectorRow');
+      row.classList.toggle('hidden');
+    }
+
+    async function humanAction(actionType, raiseExtra = 200) {
+      if (isProcessingTurn || activeTurnIndex !== 0) return;
+      isProcessingTurn = true;
+      document.getElementById('raiseSelectorRow').classList.add('hidden');
+
+      const human = players[0];
+      const toCall = Math.max(0, currentHighBet - human.bet);
+
+      if (actionType === 'FOLD') {
+        human.folded = true;
+        human.status = '棄牌';
+        sound.playSFX('fold');
+        setBroadcast('你選擇了棄牌，觀戰本局剩餘發牌...');
+      } else if (actionType === 'CALL') {
+        const amt = Math.min(toCall, human.chips);
+        human.chips -= amt;
+        human.bet += amt;
+        pot += amt;
+        if (human.chips === 0 && amt > 0) human.allIn = true;
+        human.status = amt === 0 ? '過牌' : `跟注 $${amt}`;
+        sound.playSFX('chip');
+        setBroadcast(`你選擇了${human.status}`);
+      } else if (actionType === 'RAISE') {
+        const totalBet = Math.min(toCall + raiseExtra, human.chips);
+        human.chips -= totalBet;
+        human.bet += totalBet;
+        pot += totalBet;
+        currentHighBet = Math.max(currentHighBet, human.bet);
+        if (human.chips === 0) human.allIn = true;
+        human.status = `加注 +$${raiseExtra}`;
+        sound.playSFX('chip');
+        setBroadcast(`你加注至 $${human.bet}！`);
+      } else if (actionType === 'ALLIN') {
+        const all = human.chips;
+        human.chips = 0;
+        human.bet += all;
+        pot += all;
+        currentHighBet = Math.max(currentHighBet, human.bet);
+        human.allIn = true;
+        human.status = 'ALL IN!';
+        sound.playSFX('allIn');
+        setBroadcast(`🔥 霸氣 ALL IN！全押 $${all}！`);
+      }
+
+      renderTableUI();
+      await sleep(360);
+      await runAITurnsAndAdvanceStage();
+    }
+
+    // Clockwise AI turn order after Human (Seat 0 -> Seat 2 (8 o'clock) -> Seat 1 (10 o'clock) -> Seat 4 (2 o'clock) -> Seat 3 (4 o'clock))
+    const AI_CLOCKWISE_TURN_ORDER = [2, 1, 4, 3];
+
+    async function runAITurnsAndAdvanceStage() {
+      for (const i of AI_CLOCKWISE_TURN_ORDER) {
+        const bot = players[i];
+        if (bot.folded || bot.allIn) continue;
+
+        const aliveCount = players.filter(p => !p.folded).length;
+        if (aliveCount <= 1) break;
+
+        activeTurnIndex = i;
+        renderTableUI();
+        await sleep(420);
+
+        const evalHand = evaluatePureMatchingHand(bot.holeCards, communityCards);
+        const toCall = Math.max(0, currentHighBet - bot.bet);
+
+        if (toCall > 0 && evalHand.rank === 1 && bot.personality === 'CONSERVATIVE' && stage !== 'PREFLOP' && Math.random() < 0.65) {
+          bot.folded = true;
+          bot.status = '棄牌';
+          sound.playSFX('fold');
+          setBroadcast(`${bot.name} 選擇棄牌`);
+        } else if (
+          (evalHand.rank >= 4 || (bot.personality === 'AGGRESSIVE' && evalHand.rank >= 2) || (bot.personality === 'BLUFFER' && Math.random() < 0.25))
+          && bot.chips > toCall + 200
+          && currentHighBet < 1800
+        ) {
+          const raiseAmt = 200;
+          const totalAdd = Math.min(toCall + raiseAmt, bot.chips);
+          bot.chips -= totalAdd;
+          bot.bet += totalAdd;
+          pot += totalAdd;
+          currentHighBet = Math.max(currentHighBet, bot.bet);
+          if (bot.chips === 0) bot.allIn = true;
+          bot.status = `加注 +$200`;
+          sound.playSFX('chip');
+          setBroadcast(`${bot.name} 加注至 $${bot.bet}`);
+        } else {
+          const callAmt = Math.min(toCall, bot.chips);
+          bot.chips -= callAmt;
+          bot.bet += callAmt;
+          pot += callAmt;
+          if (bot.chips === 0 && callAmt > 0) bot.allIn = true;
+          bot.status = callAmt === 0 ? '過牌' : `跟注`;
+          sound.playSFX('chip');
+          setBroadcast(`${bot.name} ${bot.status}`);
+        }
+
+        renderTableUI();
+      }
+
+      // If AI raised above Human's bet and Human is still able to act, equalize or prompt
+      const human = players[0];
+      if (!human.folded && !human.allIn && human.bet < currentHighBet) {
+        const diff = Math.min(currentHighBet - human.bet, human.chips);
+        human.chips -= diff;
+        human.bet += diff;
+        pot += diff;
+        human.status = `自動補齊 $${diff}`;
+        sound.playSFX('chip');
+        renderTableUI();
+        await sleep(280);
+      }
+
+      await advanceToNextStage();
+    }
+
+    async function advanceToNextStage() {
+      const activePlayers = players.filter(p => !p.folded);
+      if (activePlayers.length <= 1) {
+        await resolveShowdown();
+        return;
+      }
+
+      players.forEach(p => {
+        if (!p.folded && !p.allIn) p.status = '';
+      });
+
+      if (stage === 'PREFLOP') {
+        stage = 'FLOP';
+        setBroadcast('莊家發出翻牌圈 Flop（3 張公共牌）...');
+        renderTableUI();
+        await dealCommunityCards(3);
+      } else if (stage === 'FLOP') {
+        stage = 'TURN';
+        setBroadcast('莊家發出轉牌圈 Turn（第 4 張公共牌）...');
+        renderTableUI();
+        await dealCommunityCards(1);
+      } else if (stage === 'TURN') {
+        stage = 'RIVER';
+        setBroadcast('莊家發出河牌圈 River（第 5 張公共牌）...');
+        renderTableUI();
+        await dealCommunityCards(1);
+      } else if (stage === 'RIVER') {
+        await resolveShowdown();
+        return;
+      }
+
+      if (players[0].folded || players[0].allIn) {
+        await sleep(500);
+        await runAITurnsAndAdvanceStage();
+      } else {
+        activeTurnIndex = 0;
+        isProcessingTurn = false;
+        setBroadcast(`進入${stage}，輪到你行動`);
+        renderTableUI();
+      }
+    }
+
+    async function dealCommunityCards(count) {
+      for (let i = 0; i < count; i++) {
+        const targetIndex = communityCards.length;
+        const card = deck.pop();
+        card.faceUp = true;
+        communityCards.push(card);
+
+        // Fly from Dealer's Shoe to the specific community slot without affecting previous cards
+        await animateDealFromDealerToSlot(card, `comm-slot-${targetIndex}`);
+        sound.playSFX('flip');
+        renderTableUI();
+        await sleep(140);
+      }
+    }
+
+    /********************************************************************
+     * 7. 攤牌結算 (Showdown)：純圖像數量比對，同牌型平手均分底池
+     ********************************************************************/
+    async function resolveShowdown() {
+      stage = 'SHOWDOWN';
+      activeTurnIndex = -1;
+      isProcessingTurn = false;
+
+      // Flip all surviving players' hole cards face-up
+      players.forEach(p => {
+        if (!p.folded) {
+          p.holeCards.forEach(c => c.faceUp = true);
+        }
+      });
+      sound.playSFX('flip');
+      renderTableUI();
+      await sleep(500);
+
+      let highestRank = -1;
+      let winners = [];
+      const breakdownRows = [];
+
+      for (const p of players) {
+        if (p.folded) {
+          breakdownRows.push({ player: p, text: '已棄牌', rank: 0, isWin: false });
+          continue;
+        }
+        const ev = evaluatePureMatchingHand(p.holeCards, communityCards);
+        p.status = ev.title;
+        breakdownRows.push({ player: p, text: ev.detail, rank: ev.rank, isWin: false });
+
+        if (ev.rank > highestRank) {
+          highestRank = ev.rank;
+          winners = [p];
+        } else if (ev.rank === highestRank) {
+          winners.push(p);
+        }
+      }
+
+      const splitPot = Math.floor(pot / winners.length);
+      winners.forEach(w => {
+        w.chips += splitPot;
+      });
+
+      const winnerIds = new Set(winners.map(w => w.id));
+      breakdownRows.forEach(row => {
+        if (winnerIds.has(row.player.id)) row.isWin = true;
+      });
+
+      const winnerNames = winners.map(w => w.name).join('、');
+      const winRankName = winners[0]?.status || '單張';
+
+      if (winnerIds.has(0)) {
+        sound.playSFX('win');
+      } else {
+        sound.playSFX('lose');
+      }
+
+      renderTableUI();
+
+      // Populate Showdown Modal
+      document.getElementById('winnerModalTitle').textContent =
+        winners.length > 1 ? `🤝 平手分池！【${winRankName}】` : `🎉 ${winnerNames} 獲勝！`;
+
+      document.getElementById('winnerModalDesc').textContent =
+        winners.length > 1
+          ? `${winnerNames} 同為【${winRankName}】，平分總底池各得 $${splitPot.toLocaleString()}！`
+          : `${winnerNames} 以【${winRankName}】獨得總底池 $${pot.toLocaleString()}！`;
+
+      const listEl = document.getElementById('showdownBreakdownList');
+      listEl.innerHTML = breakdownRows.map(r => `
+        <div class="flex items-center justify-between px-3 py-1.5 rounded-xl border ${r.isWin ? 'bg-yellow-400/20 border-yellow-400 text-yellow-200' : 'bg-white/5 border-white/10 text-white/75'}">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-black">${r.isWin ? '👑' : '•'} ${r.player.name}</span>
+          </div>
+          <span class="text-[11px] font-bold">${r.text}</span>
+        </div>
+      `).join('');
+
+      setBroadcast(`本局結束：${winnerNames} 以【${winRankName}】贏得底池！`);
+      await sleep(550);
+      document.getElementById('showdownModal').classList.remove('hidden');
+    }
+
+    function toggleRulesModal(show) {
+      const modal = document.getElementById('rulesModal');
+      modal.classList.toggle('hidden', !show);
+    }
+
+    function resetAllChips() {
+      players.forEach(p => p.chips = 5000);
+      sound.playSFX('chip');
+      setBroadcast('已為全桌 5 位玩家補充籌碼至 $5,000');
+      renderTableUI();
+    }
+
+    // Initialize Human Avatar, Persistent AI Seats & Rules Character Gallery on Load
+    window.onload = () => {
+      buildSeatDOMStructureOnce();
+      document.getElementById('humanAvatarBox').innerHTML = generateChibiPortraitSVG(CHARACTERS[0]);
+
+      const gallery = document.getElementById('characterGalleryGrid');
+      gallery.innerHTML = CHARACTERS.map(c => `
+        <div class="bg-white rounded-lg p-1 flex flex-col items-center border border-yellow-500">
+          <div class="w-full aspect-square rounded overflow-hidden">
+            ${generateChibiPortraitSVG(c)}
+          </div>
+          <span class="text-[9px] font-black text-slate-900 mt-0.5 truncate w-full text-center">${c.badge}${c.name}</span>
+        </div>
+      `).join('');
+
+      renderTableUI();
+    };
+  </script>
+</body>
+</html>
